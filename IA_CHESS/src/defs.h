@@ -47,6 +47,7 @@
 #define ROW(x)			(x >> 3)
 #define COL(x)			(x & 7)
 
+#define PIECE_DEAD		0
 
 /* This is the basic description of a move. promote is what
    piece to promote the pawn to, if the move is a pawn
@@ -86,6 +87,7 @@ typedef struct {
    necessary to take a move back. */
 typedef struct {
 	move m;
+	int capture_board;
 	int capture;
 	int castle;
 	int ep;
@@ -93,4 +95,4 @@ typedef struct {
 	int hash;
 } hist_t;
 
-#define ASSERT(x) if (!x){x/=x;} // Best idea ever c:
+#define ASSERT(x) assert(x) // Best idea ever c:

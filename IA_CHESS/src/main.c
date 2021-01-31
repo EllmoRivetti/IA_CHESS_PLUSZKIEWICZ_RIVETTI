@@ -476,6 +476,7 @@ void bench()
 		color[i] = bench_color[i];
 		piece[i] = bench_piece[i];
 	}
+	sync_board();
 	side = LIGHT;
 	xside = DARK;
 	castle = 0;
