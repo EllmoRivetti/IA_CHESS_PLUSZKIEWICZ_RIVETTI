@@ -92,3 +92,5 @@ typedef struct {
 	int fifty;
 	int hash;
 } hist_t;
+
+#define ASSERT(x) if (!x){x/=x;} // Best idea ever c:

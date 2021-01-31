@@ -43,3 +43,5 @@ extern int castle_mask[64];
 extern char piece_char[6];
 extern int init_color[64];
 extern int init_piece[64];
+extern int pospiece[33];
+extern int board[64];

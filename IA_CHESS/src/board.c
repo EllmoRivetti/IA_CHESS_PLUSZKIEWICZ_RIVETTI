@@ -12,16 +12,107 @@
 #include "protos.h"
 
 
-/* init_board() sets the board to the initial game state. */
+void sync_board()
+{
+	int i;
+	memset(board, 0, sizeof(board));
+	/*for(i = 0; i <= 32; i++)
+	{
+		pospiece[i] = PIECE_DEAD;
+	}*/
 
+	bool** found_pieces = (bool**)malloc((sizeof(bool*) * 2) + (sizeof(bool) * 2 * 4));
+	memset(found_pieces, 0, sizeof(bool) * 2 * 4);
+	// [COLOR][PIECE: NOTHING, bishop, knight, rook]	 			 		    
+
+	int count_white_pawn = 0, count_dark_pawn = 0;
+
+	for (i = 0; i < 64; ++i)
+	{
+		if (color[i] != EMPTY)
+		{
+			int current_piece_type = piece[i];
+			int current_piece = -1;
+			if (current_piece_type == KING)
+				current_piece = 1;
+			else if (current_piece_type == QUEEN)
+				current_piece = 5;
+			else if (current_piece_type == ROOK || current_piece_type == BISHOP || current_piece_type == KNIGHT)
+			{
+				switch (current_piece_type)
+				{
+				case ROOK: 		current_piece = 2; break;
+				case KNIGHT: 	current_piece = 3; break;
+				case BISHOP: 	current_piece = 4; break;
+				}
+				if (found_pieces[color[i]][current_piece_type])
+					// We saw that 10 - the current piece id will always be the second piece of the same type and color 
+					current_piece = 10 - current_piece;
+				else
+					found_pieces[color[i]][current_piece_type] = TRUE;
+			}
+			else if (current_piece_type == PAWN)
+			{
+				if (color[i] == LIGHT)
+				{
+					// range of light pawns 9 -> 16 
+					current_piece = count_white_pawn + 9;
+					++count_white_pawn;
+				}
+				else
+				{
+					// range of dark pawns 25 -> 32
+					current_piece = count_dark_pawn + 25;
+					++count_dark_pawn;
+				}
+			}
+			assert(current_piece != -1);
+			board[i] = current_piece + color[i] * 16;
+		}
+		pospiece[board[i]] = i;
+	}
+	free(found_pieces);
+}
+
+int checkBoard()
+{ // Cette fonction peut être plus ou moins longue, dépendamment de vos besoins en matière de debug
+	for (int i = 0; i < 64; ++i)
+	{
+		if (piece[i] != EMPTY && board[i] == 0)
+			return 0;
+		if (piece[i] == EMPTY && board[i])
+			return 0;
+		if (color[i] == LIGHT && (board[i] > 16 || board[i] == 0))
+			return 0;
+		if (color[i] == DARK && board[i] < 17)
+			return 0;
+		if (board[i] && pospiece[board[i]] != i)
+			return 0;
+	}
+
+	for (int i = 1; i <= 32; ++i)
+	{
+		if (pospiece[i] != PIECE_DEAD && board[pospiece[i]] != i)
+			return 0;
+		if (pospiece[i] != PIECE_DEAD && piece[pospiece[i]] == EMPTY)
+			return 0;
+		if (pospiece[i] != PIECE_DEAD && (color[pospiece[i]] == LIGHT && i > 16 || color[pospiece[i]] == DARK && i < 17))
+			return 0;
+	}
+	return 1;
+}
+
+/* init_board() sets the board to the initial game state. */
 void init_board()
 {
 	int i;
 
-	for (i = 0; i < 64; ++i) {
+	for (i = 0; i < 64; ++i)
+	{
 		color[i] = init_color[i];
 		piece[i] = init_piece[i];
 	}
+	sync_board();
 	side = LIGHT;
 	xside = DARK;
 	castle = 15;
