@@ -12,9 +12,9 @@
 #include "data.h"
 #include "protos.h"
 
-void sync_board_()
+void sync_board()
 {
-	int i;
+	/*int i;
 	memset(board, 0, sizeof(board));
 
 	BOOL found_pieces[2][4]; // [COLOR][PIECE: NOTHING, bishop, knight, rook]
@@ -65,6 +65,32 @@ void sync_board_()
 			board[i] = current_piece + color[i] * 16;
 		}
 		pospiece[board[i]] = i;
+	}*/
+	memset(board, 0, sizeof(board));
+	for (int i = 0; i <= 32; i++)
+		pospiece[i] = PIECE_DEAD;
+	int cpt[2] = { 2, 18 };
+	pospiece[0] = PIECE_DEAD;
+	for (int i = 0; i < 64; i++)
+	{
+		if (color[i] != EMPTY)
+		{
+			if (piece[i] == KING) {
+				if (color[i] == LIGHT) {
+					pospiece[1] = i;
+					board[i] = 1;
+				}
+				else {
+					pospiece[17] = i;
+					board[i] = 17;
+				}
+			}
+			else {
+				pospiece[cpt[color[i]]] = i;
+				board[i] = cpt[color[i]];
+				cpt[color[i]]++;
+			}
+		}
 	}
 }
 
@@ -462,7 +488,7 @@ void gen_promote(int from, int to, int bits)
    undoes whatever it did and returns FALSE. Otherwise, it
    returns TRUE. */
 
-BOOL makemove_old(move_bytes m)
+BOOL makemove(move_bytes m)
 {
 	//assert(checkBoard("makemove 1"));
 	/* test to see if a castle move is legal and move the rook
