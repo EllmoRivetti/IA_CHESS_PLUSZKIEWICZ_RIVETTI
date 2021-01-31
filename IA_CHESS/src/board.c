@@ -14,22 +14,44 @@
 
 void sync_board()
 {
-	/*int i;
+	int i;
+	int cmpt[2] = { 2, 18 };
 	memset(board, 0, sizeof(board));
+	for (int i = 0; i <= 32; i++)
+		pospiece[i] = PIECE_DEAD;
+	
 
-	BOOL found_pieces[2][4]; // [COLOR][PIECE: NOTHING, bishop, knight, rook]
-	memset(found_pieces, 0, sizeof(found_pieces));
+	pospiece[0] = PIECE_DEAD;
+	// BOOL found_pieces[2][4]; // [COLOR][PIECE: NOTHING, bishop, knight, rook]
+	// memset(found_pieces, 0, sizeof(found_pieces));
 
-	int count_white_pawn = 0, count_dark_pawn = 0;
+	// int count_white_pawn = 0, count_dark_pawn = 0;
 
 	for (i = 0; i < 64; ++i)
 	{
 		if (color[i] != EMPTY)
 		{
-			int current_piece_type = piece[i];
-			int current_piece = -1;
-			if (current_piece_type == KING)
-				current_piece = 1;
+
+			if (piece[i] == KING)
+			{
+				if (color[i] == LIGHT)
+				{
+					pospiece[1] = i;
+					board[i] = 1;
+				}
+				else
+				{
+					pospiece[17] = i;
+					board[i] = 17;
+				}
+			}
+			else
+			{
+				pospiece[cmpt[color[i]]] = i;
+				board[i] = cmpt[color[i]]++;
+			}
+			// No point setting anything else than the KING
+			/* 
 			else if (current_piece_type == QUEEN)
 				current_piece = 5;
 			else if (current_piece_type == ROOK || current_piece_type == BISHOP || current_piece_type == KNIGHT)
@@ -61,11 +83,13 @@ void sync_board()
 					++count_dark_pawn;
 				}
 			}
-			assert(current_piece != -1);
-			board[i] = current_piece + color[i] * 16;
+			*/
+			
+			// assert(current_piece != -1);
+
 		}
-		pospiece[board[i]] = i;
-	}*/
+	}
+	/*
 	memset(board, 0, sizeof(board));
 	for (int i = 0; i <= 32; i++)
 		pospiece[i] = PIECE_DEAD;
@@ -92,6 +116,7 @@ void sync_board()
 			}
 		}
 	}
+	*/
 }
 
 int checkBoard(char* str)
