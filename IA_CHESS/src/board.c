@@ -12,6 +12,36 @@
 #include "data.h"
 #include "protos.h"
 
+
+void initAttackTables()
+{
+	memset(canAttack, 0, sizeof(canAttack));
+
+	int i_case, i_piece_type, i_offset, move, offset_count;
+	for (i_piece_type = 1; i_piece_type < 6; ++i_piece_type)
+	{
+		for (i_case = 0; i_case < 64; ++i_case)
+		{
+			for (i_offset = 0; i_offset < offsets[i_piece_type]; ++i_offset)
+			{
+				move = i_case;
+				canAttack[i_piece_type][i_case][move] = TRUE;
+				while (TRUE) // for(move=i;;) is basically a while(TRUE)
+				{
+					move = mailbox[mailbox64[i_case] + offset[i_piece_type][i_offset]];
+					if (move == -1)
+						break;
+					if (color[move] != EMPTY)
+						break;
+					if (!slide[i_piece_type])
+						break;
+					canAttack[i_piece_type][i_case][move] = TRUE;
+				}
+			}
+		}
+	}
+}
+
 void sync_board()
 {
 	int i;
@@ -19,7 +49,6 @@ void sync_board()
 	memset(board, 0, sizeof(board));
 	for (int i = 0; i <= 32; i++)
 		pospiece[i] = PIECE_DEAD;
-	
 
 	pospiece[0] = PIECE_DEAD;
 	// BOOL found_pieces[2][4]; // [COLOR][PIECE: NOTHING, bishop, knight, rook]
@@ -89,34 +118,6 @@ void sync_board()
 
 		}
 	}
-	/*
-	memset(board, 0, sizeof(board));
-	for (int i = 0; i <= 32; i++)
-		pospiece[i] = PIECE_DEAD;
-	int cpt[2] = { 2, 18 };
-	pospiece[0] = PIECE_DEAD;
-	for (int i = 0; i < 64; i++)
-	{
-		if (color[i] != EMPTY)
-		{
-			if (piece[i] == KING) {
-				if (color[i] == LIGHT) {
-					pospiece[1] = i;
-					board[i] = 1;
-				}
-				else {
-					pospiece[17] = i;
-					board[i] = 17;
-				}
-			}
-			else {
-				pospiece[cpt[color[i]]] = i;
-				board[i] = cpt[color[i]];
-				cpt[color[i]]++;
-			}
-		}
-	}
-	*/
 }
 
 int checkBoard(char* str)
@@ -276,18 +277,19 @@ BOOL attack(int sq, int s)
 				}
 			}
 			else
-				for (j = 0; j < offsets[piece[id]]; ++j)
-					for (n = id;;) {
-						n = mailbox[mailbox64[n] + offset[piece[id]][j]];
-						if (n == -1)
-							break;
-						if (n == sq)
-							return TRUE;
-						if (color[n] != EMPTY)
-							break;
-						if (!slide[piece[id]])
-							break;
-					}
+				return canAttack[piece[i]][i][sq];
+			// for (j = 0; j < offsets[piece[i]]; ++j)
+			// 	for (n = i;;) {
+			// 		n = mailbox[mailbox64[n] + offset[piece[i]][j]];
+			// 		if (n == -1)
+			// 			break;
+			// 		if (n == sq)
+			// 			return TRUE;
+			// 		if (color[n] != EMPTY)
+			// 			break;
+			// 		if (!slide[piece[i]])
+			// 			break;
+			// 	}
 		}
 	}
 	return FALSE;

@@ -45,3 +45,4 @@ extern int init_color[64];
 extern int init_piece[64];
 extern int pospiece[33];
 extern int board[64];
+extern char canAttack[6][64][64];
