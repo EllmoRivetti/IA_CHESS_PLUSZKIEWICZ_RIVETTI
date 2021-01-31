@@ -47,7 +47,7 @@
 #define ROW(x)			(x >> 3)
 #define COL(x)			(x & 7)
 
-
+ 
 /* This is the basic description of a move. promote is what
    piece to promote the pawn to, if the move is a pawn
    promotion. bits is a bitfield that describes the move,
