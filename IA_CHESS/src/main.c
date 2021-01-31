@@ -48,6 +48,7 @@ int main()
 	printf("\"help\" displays a list of commands.\n");
 	printf("\n");
 	init_hash();
+	initAttackTables();
 	init_board();
 	open_book();
 	gen();
