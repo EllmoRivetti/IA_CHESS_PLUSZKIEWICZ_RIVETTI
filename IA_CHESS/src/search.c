@@ -168,7 +168,7 @@ int search(int alpha, int beta, int depth)
 int quiesce(int alpha,int beta)
 {
 	int i, j, x;
-
+	 
 	++nodes;
 
 	/* do some housekeeping every 1024 nodes */
