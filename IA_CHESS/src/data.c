@@ -22,7 +22,7 @@ int ep;  /* the en passant square. if white moves e2e4, the en passant
 			in an en passant capture */
 int fifty;  /* the number of moves since a capture or pawn move, used
                to handle the fifty-move-draw rule */
-int hash;  /* a (more or less) unique number that corresponds to the
+unsigned int hash;  /* a (more or less) unique number that corresponds to the
               position */
 int ply;  /* the number of half-moves (ply) since the
              root of the search tree */
@@ -177,3 +177,6 @@ int init_piece[64] = {
 	0, 0, 0, 0, 0, 0, 0, 0,
 	3, 1, 2, 4, 5, 2, 1, 3
 };
+
+
+HtTyp htable[HTABLE_SIZE];

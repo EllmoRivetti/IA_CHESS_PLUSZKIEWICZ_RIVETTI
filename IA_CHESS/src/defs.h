@@ -90,5 +90,38 @@ typedef struct {
 	int castle;
 	int ep;
 	int fifty;
-	int hash;
+	unsigned int hash;
 } hist_t;
+
+typedef struct
+{
+	unsigned int hash; // hash servant à vérifier la validité
+	// de l’entrée
+	short score;
+	unsigned char flag; // indique si le score est FLAG_EXACT,
+	// FLAG_LOW_BOUND ou FLAG_UPPER_BOUND
+	unsigned char depth; // Profondeur de reherche
+} HtTyp;
+
+#define MAX_PLY 1000
+#define HTABLE_SIZE 500000
+
+#define SCALE_MATE_VALUE(value) \
+{\
+ if (value > 10000-MAX_PLY) \
+ {value += (ply);};\
+ if (value < -10000+MAX_PLY) \
+ {value -= (ply);};\
+}
+#define UNSCALE_MATE_VALUE(value) \
+{\
+ if (value > 10000-MAX_PLY) \
+ value -= (ply);\
+ if (value < -10000+MAX_PLY) \
+ value += (ply);\
+}
+
+// TODO set values
+#define FLAG_L_BOUND 1
+#define FLAG_U_BOUND 2
+#define FLAG_VALID 4

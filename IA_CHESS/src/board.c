@@ -540,3 +540,46 @@ void takeback()
 		}
 	}
 }
+
+void putTT(unsigned int hash, int depth, int eval, move m, int alpha, int beta)
+{
+	// Soit pTransp un pointeur sur l�entr�e de la table de transposition correspondant
+	///	au hash courant
+	HtTyp* pTransp = &htable[hash % HTABLE_SIZE];
+	if (pTransp->depth <= depth)
+	{
+		pTransp->hash = hash;
+		pTransp->depth = depth;
+		// pTransp->move = m;
+
+		if (eval <= alpha)
+		{
+			pTransp->flag = FLAG_U_BOUND;
+			SCALE_MATE_VALUE(eval);
+			pTransp->score = eval;
+		}
+		else
+		{
+			if (eval >= beta)
+			{
+				pTransp->flag = FLAG_L_BOUND;
+				SCALE_MATE_VALUE(eval);
+				pTransp->score = eval;
+			}
+			else
+			{
+				SCALE_MATE_VALUE(eval);
+				pTransp->score = eval;
+				pTransp->flag = FLAG_VALID;
+			}
+		}
+	}
+}
+
+HtTyp* getTT(unsigned int hash)
+{
+	HtTyp* pTransp = &htable[hash % HTABLE_SIZE];
+	if (hash == pTransp->hash)
+		return pTransp;
+	return NULL;
+}
