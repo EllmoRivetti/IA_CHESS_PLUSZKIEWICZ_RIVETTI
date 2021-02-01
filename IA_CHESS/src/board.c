@@ -55,13 +55,13 @@ void init_hash()
    we have good coverage of all 32 bits. (rand() returns 16-bit numbers
    on some systems.) */
 
-int hash_rand()
+unsigned int hash_rand()
 {
 	int i;
 	int r = 0;
 
 	for (i = 0; i < 32; ++i)
-		r ^= rand() << i;
+		r ^= (unsigned int) (rand() << i);
 	return r;
 }
 

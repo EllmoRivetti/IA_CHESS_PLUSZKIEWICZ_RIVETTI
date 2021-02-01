@@ -178,5 +178,4 @@ int init_piece[64] = {
 	3, 1, 2, 4, 5, 2, 1, 3
 };
 
-
 HtTyp htable[HTABLE_SIZE];
