@@ -544,8 +544,8 @@ void takeback()
 void putTT(unsigned int hash, int depth, int eval, move m, int alpha, int beta)
 {
 	// Soit pTransp un pointeur sur l�entr�e de la table de transposition correspondant
-	///	au hash courant
-	HtTyp* pTransp = &htable[hash % HTABLE_SIZE];
+	//	au hash courant
+	HtTyp* pTransp = &htable[hash % MAX_ENTRY];
 	if (pTransp->depth <= depth)
 	{
 		pTransp->hash = hash;
@@ -578,7 +578,7 @@ void putTT(unsigned int hash, int depth, int eval, move m, int alpha, int beta)
 
 HtTyp* getTT(unsigned int hash)
 {
-	HtTyp* pTransp = &htable[hash % HTABLE_SIZE];
+	HtTyp* pTransp = &htable[hash % MAX_ENTRY];
 	if (hash == pTransp->hash)
 		return pTransp;
 	return NULL;

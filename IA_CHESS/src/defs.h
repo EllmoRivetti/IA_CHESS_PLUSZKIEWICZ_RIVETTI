@@ -101,10 +101,11 @@ typedef struct
 	unsigned char flag; // indique si le score est FLAG_EXACT,
 	// FLAG_LOW_BOUND ou FLAG_UPPER_BOUND
 	unsigned char depth; // Profondeur de reherche
-} HtTyp;
+} HtTyp;
+
 
 #define MAX_PLY 1000
-#define HTABLE_SIZE 500000
+#define MAX_ENTRY 500000
 
 #define SCALE_MATE_VALUE(value) \
 {\

@@ -114,28 +114,27 @@ int search(int alpha, int beta, int depth)
 				pv_length[ply] = ply;
 				return pTranspEval;
 			}
-			else
-				if (pTransp->flag & FLAG_L_BOUND)
+			else if (pTransp->flag & FLAG_L_BOUND)
+			{
+				if (alpha < pTranspEval)
+					alpha = pTranspEval;
+			}
+			else if (pTransp->flag & FLAG_U_BOUND)
+			{
+				if (beta > pTranspEval)
 				{
-					if (alpha < pTranspEval)
-						alpha = pTranspEval;
+					beta = pTranspEval;
+					//canUseNullMove = FALSE;
 				}
-				else
-					if (pTransp->flag & FLAG_U_BOUND)
-					{
-						if (beta > pTranspEval)
-						{
-							beta = pTranspEval;
-							//canUseNullMove = FALSE;
-						}
-					}
+			}
 			if (alpha >= beta)
 			{
 				pv_length[ply] = ply;
 				return alpha;
 			}
 		}
-	}
+	}
+
 
 	/* are we too deep? */
 	if (ply >= MAX_PLY - 1)
@@ -161,7 +160,8 @@ int search(int alpha, int beta, int depth)
 		x = -search(-beta, -alpha, depth - 1);
 		takeback();
 		if (x > alpha) {
-			if (!stop_search) putTT(hash, depth, x, alpha, beta);
+			if (!stop_search) putTT(hash, depth, x, alpha, beta);
+
 			/* this move caused a cutoff, so increase the history
 			   value so it gets ordered high next time we can
 			   search it */
@@ -228,27 +228,26 @@ int quiesce(int alpha,int beta)
 			pv_length[ply] = ply;
 			return pTranspEval;
 		}
-		else
-			if (pTransp->flag & FLAG_L_BOUND)
+		else if (pTransp->flag & FLAG_L_BOUND)
+		{
+			if (alpha < pTranspEval)
+				alpha = pTranspEval;
+		}
+		else if (pTransp->flag & FLAG_U_BOUND)
+		{
+			if (beta > pTranspEval)
 			{
-				if (alpha < pTranspEval)
-					alpha = pTranspEval;
+				beta = pTranspEval;
+				//canUseNullMove = FALSE;
 			}
-			else
-				if (pTransp->flag & FLAG_U_BOUND)
-				{
-					if (beta > pTranspEval)
-					{
-						beta = pTranspEval;
-						//canUseNullMove = FALSE;
-					}
-				}
+		}
 		if (alpha >= beta)
 		{
 			pv_length[ply] = ply;
 			return alpha;
 		}
-	}
+	}
+
 	/* check with the evaluation function */
 	x = eval();
 	if (x >= beta)
