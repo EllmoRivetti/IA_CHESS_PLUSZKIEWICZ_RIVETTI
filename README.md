@@ -17,12 +17,12 @@ Contient le code de l'optimisation 2
 
 ### [main](https://github.com/EllmoRivetti/IA_CHESS_PLUSZKIEWICZ_RIVETTI/tree/main)
 La branche main contient les optimisations 1 et 2 implementées et rassemblées.
-Le rapport du TD1 se trouve sur cette branche.
+Le rapport du TD2 se trouve sur cette branche.
 
 ## TD4 - Table de transposition
 ### [td4_hash](https://github.com/EllmoRivetti/IA_CHESS_PLUSZKIEWICZ_RIVETTI/tree/td4_hash)
 Contient le code de la partie "Optimisation des fonctions de hashing" du TD4.
-La branche original_tscp contient le code original de TSCP.
+Le rapport du TD4 se trouve sur cette branche.
 
 ### [opti3](https://github.com/EllmoRivetti/IA_CHESS_PLUSZKIEWICZ_RIVETTI/tree/opti3)
-Contient le code de la partie "mplémentation d’une table de transposition"du TD4.
+Contient le code de la partie "Implémentation d’une table de transposition"du TD4.
