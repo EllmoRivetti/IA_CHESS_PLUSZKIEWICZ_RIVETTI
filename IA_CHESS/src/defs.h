@@ -16,6 +16,7 @@
 
 #define LIGHT			0
 #define DARK			1
+#define NO_COLOR		6
 
 #define PAWN			0
 #define KNIGHT			1

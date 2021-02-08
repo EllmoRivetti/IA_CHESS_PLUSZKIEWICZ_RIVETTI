@@ -17,6 +17,7 @@ extern int castle;
 extern int ep;
 extern int fifty;
 extern int hash;
+extern int hash2;
 extern int ply;
 extern int hply;
 extern gen_t gen_dat[GEN_STACK];

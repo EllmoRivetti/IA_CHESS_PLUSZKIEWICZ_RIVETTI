@@ -6,10 +6,13 @@
  */
 
 
+#define USE_NEW_HASH 0
+
 #include <stdlib.h>
 #include "defs.h"
 #include "data.h"
 #include "protos.h"
+#include <assert.h>
 
 
 /* init_board() sets the board to the initial game state. */
@@ -30,6 +33,7 @@ void init_board()
 	ply = 0;
 	hply = 0;
 	set_hash();  /* init_hash() must be called before this function */
+	hash2 = hash;
 	first_move[0] = 0;
 }
 
@@ -90,6 +94,26 @@ void set_hash()
 		hash ^= hash_side;
 	if (ep != -1)
 		hash ^= hash_ep[ep];
+}
+
+int set_hash_test()
+{
+	int i;
+
+	int h = 0;
+	for (i = 0; i < 64; ++i)
+		if (color[i] != EMPTY)
+			h ^= hash_piece[color[i]][piece[i]][i];
+	if (side == DARK)
+		h ^= hash_side;
+	if (ep != -1)
+		h ^= hash_ep[ep];
+	return h;
+}
+
+void assert_hash_is_valid()
+{
+	assert(set_hash_test() == hash);
 }
 
 
@@ -362,7 +386,7 @@ void gen_promote(int from, int to, int bits)
 
 BOOL makemove(move_bytes m)
 {
-	
+
 	/* test to see if a castle move is legal and move the rook
 	   (the king is moved with the usual move code later) */
 	if (m.bits & 2) {
@@ -408,6 +432,8 @@ BOOL makemove(move_bytes m)
 		piece[to] = piece[from];
 		color[from] = EMPTY;
 		piece[from] = EMPTY;
+
+		// set_hash_check(m.from, m.to);
 	}
 
 	/* back up information so we can take the move back later. */
@@ -436,7 +462,11 @@ BOOL makemove(move_bytes m)
 	else
 		++fifty;
 
+
 	/* move the piece */
+#ifdef USE_NEW_HASH
+	int old_color = color[(int)m.to];
+#endif
 	color[(int)m.to] = side;
 	if (m.bits & 32)
 		piece[(int)m.to] = m.promote;
@@ -444,6 +474,7 @@ BOOL makemove(move_bytes m)
 		piece[(int)m.to] = piece[(int)m.from];
 	color[(int)m.from] = EMPTY;
 	piece[(int)m.from] = EMPTY;
+
 
 	/* erase the pawn if this is an en passant move */
 	if (m.bits & 4) {
@@ -457,6 +488,7 @@ BOOL makemove(move_bytes m)
 		}
 	}
 
+
 	/* switch sides and test for legality (if we can capture
 	   the other guy's king, it's an illegal position and
 	   we need to take the move back) */
@@ -466,7 +498,24 @@ BOOL makemove(move_bytes m)
 		takeback();
 		return FALSE;
 	}
+	
+#ifdef USE_NEW_HASH
+	if (m.bits == 1) // capture
+	{
+		hash ^= hash_piece[old_color][hist_dat[hply].capture][(int)m.to];
+	}
+	hash ^= hash_piece[color[(int)m.to]][piece[(int)m.to]][(int)m.from];
+	hash ^= hash_piece[color[(int)m.to]][piece[(int)m.to]][(int)m.to];
+	hash ^= hash_side;
+	if (ep != -1)
+		hash ^= hash_ep[ep];
+#else
 	set_hash();
+
+#endif
+
+	// assert_hash_is_valid();
+
 	return TRUE;
 }
 

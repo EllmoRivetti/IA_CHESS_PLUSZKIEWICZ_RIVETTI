@@ -24,6 +24,7 @@ int fifty;  /* the number of moves since a capture or pawn move, used
                to handle the fifty-move-draw rule */
 int hash;  /* a (more or less) unique number that corresponds to the
               position */
+int hash2;
 int ply;  /* the number of half-moves (ply) since the
              root of the search tree */
 int hply;  /* h for history; the number of ply since the beginning
