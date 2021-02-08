@@ -379,6 +379,72 @@ void gen_promote(int from, int to, int bits)
 	}
 }
 
+void printBits(size_t const size, void const* const ptr)
+{
+	unsigned char* b = (unsigned char*)ptr;
+	unsigned char byte;
+	int i, j;
+
+	for (i = size - 1; i >= 0; i--) {
+		for (j = 7; j >= 0; j--) {
+			byte = (b[i] >> j) & 1;
+			printf("%u", byte);
+		}
+	}
+	puts("");
+}
+
+long NegAndPosConvertToBin(int decn) {
+	if (decn < 0) return -convertToBin(-decn);
+	return convertToBin(decn);
+}
+long convertToBin(int decn)
+{
+	long binn = 0;
+	long rem;
+	long a = 1;
+	while (decn != 0)
+	{
+		rem = decn % 2;
+		binn = binn + rem * a;
+		a = a * 10;
+		decn = decn / 2;
+	}
+	return binn;
+}
+
+void debug_hash()
+{
+	int temp_hash = set_hash_test();
+	if (hash != temp_hash)
+	{
+		printf("-- KO");
+		print_board();
+		printf("my hash : %d, real hash : %d\n", hash, temp_hash);
+		// printf("my hash:  ");
+		// NegAndPosConvertToBin(hash);
+		// printf("real hash:  ");
+		// NegAndPosConvertToBin(temp_hash);
+		// printf("xor:  ");
+		// int difference = hash ^ temp_hash;
+		// printf("difference %d", difference);
+		// NegAndPosConvertToBin(difference);
+		// int i;
+		// for (i = 0; i < 64; ++i)
+		// 	if (color[i] != EMPTY)
+		// 		if (difference ^ hash_piece[color[i]][piece[i]][i] == hash_piece[color[i]][piece[i]][i])
+		// 		{
+		// 			printf("color[i]: %d", color[i]);
+		// 			printf("piece[i]: %d", piece[i]);
+		// 			printf("\n");
+		// 		}
+		// 
+		// printf("difference^ep: %d", difference ^ ep);
+		printf("my hash : %d, real hash : %d\n", hash, temp_hash);
+		// assert(0);
+	}
+}
+
 
 /* makemove() makes a move. If the move is illegal, it
    undoes whatever it did and returns FALSE. Otherwise, it
@@ -387,6 +453,7 @@ void gen_promote(int from, int to, int bits)
 BOOL makemove(move_bytes m)
 {
 
+	BOOL roqueUsed = FALSE;
 	/* test to see if a castle move is legal and move the rook
 	   (the king is moved with the usual move code later) */
 	if (m.bits & 2) {
@@ -428,12 +495,16 @@ BOOL makemove(move_bytes m)
 				to = -1;
 				break;
 		}
+		hist_dat[hply].hash = hash;
+
+		hash ^= hash_piece[color[from]][piece[from]][to];
+		hash ^= hash_piece[color[from]][piece[from]][from];
+		roqueUsed = TRUE;
+
 		color[to] = color[from];
 		piece[to] = piece[from];
 		color[from] = EMPTY;
 		piece[from] = EMPTY;
-
-		// set_hash_check(m.from, m.to);
 	}
 
 	/* back up information so we can take the move back later. */
@@ -443,6 +514,8 @@ BOOL makemove(move_bytes m)
 	hist_dat[hply].ep = ep;
 	hist_dat[hply].fifty = fifty;
 	hist_dat[hply].hash = hash;
+	if (!roqueUsed)
+		hist_dat[hply].hash = hash;
 	++ply;
 	++hply;
 
@@ -465,11 +538,26 @@ BOOL makemove(move_bytes m)
 
 	/* move the piece */
 #ifdef USE_NEW_HASH
+
+	//on enleve la piece de from
+	hash ^= hash_piece[color[(int)m.from]][piece[(int)m.from]][(int)m.from];
+	//on ajoute la piece de from a to 
+	hash ^= hash_piece[color[(int)m.from]][piece[(int)m.from]][(int)m.to];
+	//on supprime la piece si elle existe a to
+	if (m.bits & 1)
+	{
+		hash ^= hash_piece[color[(int)m.to]][piece[(int)m.to]][(int)m.to];
+	}
+
 	int old_color = color[(int)m.to];
 #endif
 	color[(int)m.to] = side;
 	if (m.bits & 32)
+	{
+		hash ^= hash_piece[color[(int)m.from]][piece[(int)m.from]][(int)m.to];
 		piece[(int)m.to] = m.promote;
+		hash ^= hash_piece[color[(int)m.from]][piece[(int)m.to]][(int)m.to];
+	}
 	else
 		piece[(int)m.to] = piece[(int)m.from];
 	color[(int)m.from] = EMPTY;
@@ -479,10 +567,12 @@ BOOL makemove(move_bytes m)
 	/* erase the pawn if this is an en passant move */
 	if (m.bits & 4) {
 		if (side == LIGHT) {
+			hash ^= hash_piece[color[m.to + 8]][piece[m.to + 8]][m.to + 8];
 			color[m.to + 8] = EMPTY;
 			piece[m.to + 8] = EMPTY;
 		}
 		else {
+			hash ^= hash_piece[color[m.to - 8]][piece[m.to - 8]][m.to - 8];
 			color[m.to - 8] = EMPTY;
 			piece[m.to - 8] = EMPTY;
 		}
@@ -500,15 +590,17 @@ BOOL makemove(move_bytes m)
 	}
 	
 #ifdef USE_NEW_HASH
-	if (m.bits == 1) // capture
-	{
-		hash ^= hash_piece[old_color][hist_dat[hply].capture][(int)m.to];
-	}
-	hash ^= hash_piece[color[(int)m.to]][piece[(int)m.to]][(int)m.from];
-	hash ^= hash_piece[color[(int)m.to]][piece[(int)m.to]][(int)m.to];
-	hash ^= hash_side;
-	if (ep != -1)
+	if (ep != -1) {
 		hash ^= hash_ep[ep];
+	}
+
+	hash ^= hash_side;
+	if (hash_ep[hist_dat[hply - 1].ep] != -1)
+	{
+		hash ^= hash_ep[hist_dat[hply - 1].ep];
+	}
+
+	debug_hash();
 #else
 	set_hash();
 

@@ -487,7 +487,7 @@ void bench()
 	hash2 = hash;
 	print_board();
 	max_time = 1 << 25;
-	max_depth = 7;
+	max_depth = 5;
 	for (i = 0; i < 3; ++i) {
 		think(1);
 		t[i] = get_ms() - start_time;
