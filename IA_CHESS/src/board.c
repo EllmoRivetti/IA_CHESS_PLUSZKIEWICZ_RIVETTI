@@ -600,7 +600,7 @@ BOOL makemove(move_bytes m)
 		hash ^= hash_ep[hist_dat[hply - 1].ep];
 	}
 
-	debug_hash();
+	// debug_hash();
 #else
 	set_hash();
 
