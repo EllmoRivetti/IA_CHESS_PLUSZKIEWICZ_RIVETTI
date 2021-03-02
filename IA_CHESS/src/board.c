@@ -5,12 +5,117 @@
  *	Copyright 1997 Tom Kerrigan
  */
 
-
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>				   
 #include "defs.h"
 #include "data.h"
 #include "protos.h"
 
+int checkBoard()
+{ // Cette fonction peut être plus ou moins longue, dépendamment de vos besoins en matière de debug
+	for (int i = 0; i < 64; ++i)
+	{
+		if (piece[i] != EMPTY && board[i] == 0)
+			return 0;
+		if (piece[i] == EMPTY && board[i])
+			return 0;
+		if (color[i] == LIGHT && (board[i] > 16||board[i]==0))
+			return 0;
+		if (color[i] == DARK && board[i] < 17)
+			return 0;
+		if (board[i] && pospiece[board[i]] != i)
+			return 0;
+	}
+	for (int i = 1; i <= 32; ++i)
+	{ 
+		if (pospiece[i]!=PIECE_DEAD && board[pospiece[i]] != i)
+			return 0;
+		if (pospiece[i] != PIECE_DEAD && piece[pospiece[i]]== EMPTY)
+			return 0;
+		if (pospiece[i] != PIECE_DEAD && (color[pospiece[i]] == LIGHT && i>16|| color[pospiece[i]] == DARK && i < 17))
+			return 0;
+	}
+	return 1;
+}
+
+void syncBoard()
+{
+	memset(board, 0, sizeof(board));
+	memset(pospiece, PIECE_DEAD, sizeof(pospiece));
+
+	int pieceIndexW = 2;  // 1 réservé au King blanc: accélère la fonction in_check()
+	int pieceIndexB = 18; // 17 réservé au king noir: accélère la fonction in_check()
+	for (int i = 0; i < 64; ++i) { // On scanne l'échiquier 
+		if (color[i] != EMPTY)
+		{
+			if (color[i] == LIGHT) 
+			{
+				// On traite les pièces blanches
+				if (piece[i] == KING)
+				{
+					pospiece[1] = i; // Index fixe pour le roi blanc
+					board[i] = 1;
+					continue; // On passe au suivant
+				}
+				ASSERT(pieceIndexW <= 16);
+				pospiece[pieceIndexW] = i;
+				board[i] = pieceIndexW++;
+			}
+			else
+			{ // On traite les pièces noires
+				if (piece[i] == KING) 
+				{
+					pospiece[17] = i;  // Index fixe pour le roi noir
+					board[i] = 17;
+					continue; // On passe au suivant
+				}
+				ASSERT(pieceIndexB <= 32);
+				pospiece[pieceIndexB] = i;
+				board[i] = pieceIndexB++;
+			}
+		}
+	}
+}
+
+// Fonction permettant de dumper les valeurs 0/1 de l atable can_attack[][][]
+void print_attacktables(char table[64])
+{
+	printf("\n8 ");
+	for (int i = 0; i < 64; ++i) {
+		if (table[i])
+			printf("1 ");
+		else
+			printf("0 ");
+		if ((i + 1) % 8 == 0 && i != 63)
+			printf("\n%d ", 7 - ROW(i));
+	}
+	printf("\n\n   a b c d e f g h\n\n");
+}
+
+
+void init_attack_table()
+{
+	memset(can_attack,0,sizeof(can_attack));
+
+	for (int piece = 1; piece < 6; ++piece) {
+		for (int from = 0; from < 64; ++from) {
+			for (int k = 0; k < offsets[piece]; ++k) {
+				for (int to = from;;) {
+					to = mailbox[mailbox64[to] + offset[piece][k]];
+					if (to == -1)
+						break;
+					ASSERT(piece>=0 && piece<=6 && from>=0 && from<=63 && to>=0 && to<=63);
+					can_attack[piece][from][to] = 1;
+					if (!slide[piece])
+						break;
+				}
+			}
+		}
+	}
+
+	//print_attacktables(can_attack[5][10]);
+}				
 
 /* init_board() sets the board to the initial game state. */
 
@@ -31,6 +136,10 @@ void init_board()
 	hply = 0;
 	set_hash();  /* init_hash() must be called before this function */
 	first_move[0] = 0;
+#ifdef USE_PIECE_LIST
+	syncBoard();
+	ASSERT(checkBoard());
+#endif					 
 }
 
 
@@ -99,12 +208,19 @@ void set_hash()
 
 BOOL in_check(int s)
 {
+#ifdef USE_PIECE_LIST
+	if (s == LIGHT)
+		return attack(pospiece[1], DARK);
+	else
+		return attack(pospiece[17], LIGHT);
+#else					 
 	int i;
 
 	for (i = 0; i < 64; ++i)
 		if (piece[i] == KING && color[i] == s)
 			return attack(i, s ^ 1);
 	return TRUE;  /* shouldn't get here */
+#endif	  
 }
 
 
@@ -113,9 +229,24 @@ BOOL in_check(int s)
 
 BOOL attack(int sq, int s)
 {
+ASSERT(checkBoard());
+
 	int i, j, n;
 
+#ifdef USE_PIECE_LIST
+	int start;
+	int end;
+	if (s == DARK) { start = 17; end = 33; }
+	else { start = 1;  end = 17; };
+
+	for (int k = start; k < end; ++k)
+		if (pospiece[k] != PIECE_DEAD) // Les coordonnées ne sont valides que si la pièce n'est pas "morte"
+		{
+			i = pospiece[k];
+#else
 	for (i = 0; i < 64; ++i)
+	{
+#endif  
 		if (color[i] == s) {
 			if (piece[i] == PAWN) {
 				if (s == LIGHT) {
@@ -132,20 +263,26 @@ BOOL attack(int sq, int s)
 				}
 			}
 			else
-				for (j = 0; j < offsets[piece[i]]; ++j)
-					for (n = i;;) {
-						n = mailbox[mailbox64[n] + offset[piece[i]][j]];
-						if (n == -1)
-							break;
-						if (n == sq)
-							return TRUE;
-						if (color[n] != EMPTY)
-							break;
-						if (!slide[piece[i]])
-							break;
-					}
+				if (can_attack[piece[i]][i][sq])
+				{
+					//if (!slide[piece[i]]) return TRUE;
+					for (j = 0; j < offsets[piece[i]]; ++j)
+						for (n = i;;) {
+							n = mailbox[mailbox64[n] + offset[piece[i]][j]];
+							if (n == -1)
+								break;
+							if (n == sq)
+								return TRUE;
+							if (color[n] != EMPTY)
+								break;
+							if (!slide[piece[i]])
+								break;
+						}
+				}
 		}
+	}
 	return FALSE;
+
 }
 
 
@@ -159,10 +296,25 @@ void gen()
 {
 	int i, j, n;
 
+	ASSERT(checkBoard());
+
 	/* so far, we have no moves for the current ply */
 	first_move[ply + 1] = first_move[ply];
 
+#ifdef USE_PIECE_LIST_GEN
+	int start;
+	int end;
+	if (side == DARK) { start = 17; end = 33; }
+	else { start = 1;  end = 17; };
+
+	for (int k = start; k < end; ++k)
+	if (pospiece[k] != PIECE_DEAD) // Les coordonnées ne sont valides que si la pièce n'est pas "morte"
+	{
+		i = pospiece[k];
+#else
 	for (i = 0; i < 64; ++i)
+	{
+#endif
 		if (color[i] == side) {
 			if (piece[i] == PAWN) {
 				if (side == LIGHT) {
@@ -204,6 +356,7 @@ void gen()
 							break;
 					}
 		}
+	}
 
 	/* generate castle moves */
 	if (side == LIGHT) {
@@ -246,9 +399,22 @@ void gen_caps()
 	int i, j, n;
 
 	first_move[ply + 1] = first_move[ply];
+#ifdef USE_PIECE_LIST_GEN
+	int start;
+	int end;
+	if (side == DARK) { start = 17; end = 33; }
+	else { start = 1;  end = 17; };
+
+	for (int k = start; k < end; ++k)
+	if (pospiece[k] != PIECE_DEAD) // Les coordonnées ne sont valides que si la pièce n'est pas "morte"
+	{
+		i = pospiece[k];
+#else
 	for (i = 0; i < 64; ++i)
+	{
+#endif
 		if (color[i] == side) {
-			if (piece[i]==PAWN) {
+			if (piece[i] == PAWN) {
 				if (side == LIGHT) {
 					if (COL(i) != 0 && color[i - 9] == DARK)
 						gen_push(i, i - 9, 17);
@@ -281,6 +447,7 @@ void gen_caps()
 							break;
 					}
 		}
+	}
 	if (ep != -1) {
 		if (side == LIGHT) {
 			if (COL(ep) != 0 && color[ep + 7] == LIGHT && piece[ep + 7] == PAWN)
@@ -404,6 +571,14 @@ BOOL makemove(move_bytes m)
 				to = -1;
 				break;
 		}
+#ifdef USE_PIECE_LIST
+		// On bouge la tour
+		ASSERT(board[from]>0 && board[from]<=32);
+		ASSERT(from>=0 && from<64 && to>=0 && to<64)
+		pospiece[board[from]]=to;
+		board[to] = board[from];
+		board[from] = 0;
+#endif  
 		color[to] = color[from];
 		piece[to] = piece[from];
 		color[from] = EMPTY;
@@ -417,6 +592,9 @@ BOOL makemove(move_bytes m)
 	hist_dat[hply].ep = ep;
 	hist_dat[hply].fifty = fifty;
 	hist_dat[hply].hash = hash;
+#ifdef USE_PIECE_LIST
+	hist_dat[hply].captureBoard = board[m.to];
+#endif
 	++ply;
 	++hply;
 
@@ -444,16 +622,37 @@ BOOL makemove(move_bytes m)
 		piece[(int)m.to] = piece[(int)m.from];
 	color[(int)m.from] = EMPTY;
 	piece[(int)m.from] = EMPTY;
+#ifdef USE_PIECE_LIST
+	ASSERT(board[m.from] > 0 && board[m.from] <= 32);
+	pospiece[board[m.from]]=m.to;
+	if (board[m.to]) pospiece[board[m.to]] = PIECE_DEAD;
+	board[m.to] = board[m.from];
+	board[m.from] = 0;
+#endif  
 
 	/* erase the pawn if this is an en passant move */
 	if (m.bits & 4) {
 		if (side == LIGHT) {
 			color[m.to + 8] = EMPTY;
 			piece[m.to + 8] = EMPTY;
+#ifdef USE_PIECE_LIST
+			ASSERT(board[m.to + 8]);
+			ASSERT(hply>=1);
+			hist_dat[hply - 1].captureEp = board[m.to + 8];
+			pospiece[board[m.to+8]] = PIECE_DEAD;
+			board[m.to+8] = 0;
+#endif  
 		}
 		else {
 			color[m.to - 8] = EMPTY;
 			piece[m.to - 8] = EMPTY;
+#ifdef USE_PIECE_LIST
+			ASSERT(board[m.to - 8]);
+			ASSERT(hply >= 1);
+			hist_dat[hply - 1].captureEp = board[m.to - 8];
+			pospiece[board[m.to - 8]] = PIECE_DEAD;
+			board[m.to - 8] = 0;
+#endif
 		}
 	}
 
@@ -491,6 +690,14 @@ void takeback()
 		piece[(int)m.from] = PAWN;
 	else
 		piece[(int)m.from] = piece[(int)m.to];
+#ifdef USE_PIECE_LIST
+	ASSERT(board[m.to]>=1 && board[m.to]<=32);
+	pospiece[board[m.to]]=m.from;
+	board[m.from] = board[m.to];
+	board[m.to] = hist_dat[hply].captureBoard;
+	ASSERT(board[m.to] >= 0 && board[m.to] <= 32);
+	if (board[m.to]) pospiece[board[m.to]]=m.to;
+#endif
 	if (hist_dat[hply].capture == EMPTY) {
 		color[(int)m.to] = EMPTY;
 		piece[(int)m.to] = EMPTY;
@@ -524,6 +731,12 @@ void takeback()
 				to = -1;
 				break;
 		}
+#ifdef USE_PIECE_LIST
+		// On bouge la tour
+		pospiece[board[from]] = to;
+		board[to] = board[from];
+		board[from] = 0;
+#endif
 		color[to] = side;
 		piece[to] = ROOK;
 		color[from] = EMPTY;
@@ -533,10 +746,22 @@ void takeback()
 		if (side == LIGHT) {
 			color[m.to + 8] = xside;
 			piece[m.to + 8] = PAWN;
+#ifdef USE_PIECE_LIST
+			// On restaure le pion "en passant"
+			ASSERT(hist_dat[hply].capture > -1 && hist_dat[hply].capture <= 32);
+			board[m.to + 8] = hist_dat[hply].captureEp;
+			pospiece[board[m.to + 8]] = m.to + 8;
+#endif
 		}
 		else {
 			color[m.to - 8] = xside;
 			piece[m.to - 8] = PAWN;
+#ifdef USE_PIECE_LIST
+			// On restaure le pion "en passant"
+			ASSERT(hist_dat[hply].capture > -1 && hist_dat[hply].capture <= 32);
+			board[m.to - 8] = hist_dat[hply].captureEp;
+			pospiece[board[m.to - 8]] = m.to - 8;
+#endif
 		}
 	}
 }

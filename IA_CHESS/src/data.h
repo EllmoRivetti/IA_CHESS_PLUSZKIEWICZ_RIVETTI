@@ -43,3 +43,9 @@ extern int castle_mask[64];
 extern char piece_char[6];
 extern int init_color[64];
 extern int init_piece[64];
+
+extern int pospiece[33]; // le tableau des positions des pièces de l’échiquier 
+extern int board[64];    // L’échiquier contenant les index de pospiece
+extern char can_attack[6][64][64]; // can_attack[piece][from][to]
+                                   // Table prégénéréé permettant de savoir si une pièce située 
+                                   // sur la case from peut attaquer une case to

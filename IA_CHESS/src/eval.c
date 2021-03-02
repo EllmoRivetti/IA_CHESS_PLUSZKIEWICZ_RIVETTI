@@ -112,6 +112,7 @@ int pawn_mat[2];  /* the value of a side's pawns */
 
 int eval()
 {
+	ASSERT(checkBoard());
 	int i;
 	int f;  /* file */
 	int score[2];  /* each side's score */
@@ -125,9 +126,17 @@ int eval()
 	piece_mat[DARK] = 0;
 	pawn_mat[LIGHT] = 0;
 	pawn_mat[DARK] = 0;
-	for (i = 0; i < 64; ++i) {
+#if 1
+	for (int k = 1; k <= 32; ++k)
+	if (pospiece[k]!=PIECE_DEAD)
+	{
+		i = pospiece[k];
+#else
+	for (i = 0; i < 64; ++i)
 		if (color[i] == EMPTY)
 			continue;
+#endif
+		//ASSERT(pospiece[board[i]]);
 		if (piece[i] == PAWN) {
 			pawn_mat[color[i]] += piece_value[PAWN];
 			f = COL(i) + 1;  /* add 1 because of the extra file in the array */
@@ -147,9 +156,17 @@ int eval()
 	/* this is the second pass: evaluate each piece */
 	score[LIGHT] = piece_mat[LIGHT] + pawn_mat[LIGHT];
 	score[DARK] = piece_mat[DARK] + pawn_mat[DARK];
+#if 1
+	for (int k = 1; k <= 32; ++k)
+		if (pospiece[k] != PIECE_DEAD)
+		{
+			i = pospiece[k];
+#else
 	for (i = 0; i < 64; ++i) {
 		if (color[i] == EMPTY)
 			continue;
+
+#endif  
 		if (color[i] == LIGHT) {
 			switch (piece[i]) {
 				case PAWN:

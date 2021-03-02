@@ -60,7 +60,7 @@ void think(int output)
 		follow_pv = TRUE;
 		x = search(-10000, 10000, i);
 		if (output == 1)
-			printf("%3d  %9d  %5d ", i, nodes, x);
+			printf("%3d  %9d  %5d %10.3f", i, nodes, x, (float)(get_ms() - start_time) / 1000.0);
 		else if (output == 2)
 			printf("%d %d %d %d",
 					i, x, (get_ms() - start_time) / 10, nodes);

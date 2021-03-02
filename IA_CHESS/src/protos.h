@@ -21,6 +21,10 @@ void gen_push(int from, int to, int bits);
 void gen_promote(int from, int to, int bits);
 BOOL makemove(move_bytes m);
 void takeback();
+void syncBoard();
+int checkBoard();
+void init_attack_table();
+void print_attacktables(char table[64]);								
 
 /* book.c */
 void open_book();

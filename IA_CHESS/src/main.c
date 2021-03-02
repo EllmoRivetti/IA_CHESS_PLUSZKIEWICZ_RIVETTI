@@ -51,9 +51,10 @@ int main()
 	init_board();
 	open_book();
 	gen();
+	init_attack_table();				 
 	computer_side = EMPTY;
 	max_time = 1 << 25;
-	max_depth = 4;
+	max_depth = 7;
 	for (;;) {
 		if (side == computer_side) {  /* computer's turn */
 			
@@ -359,6 +360,10 @@ void xboard()
 			computer_side = side;
 			continue;
 		}
+		if (!strcmp(command, "d")) {
+			print_board();
+			continue;
+		}
 		if (!strcmp(command, "hint")) {
 			think(0);
 			if (!pv[0][0].u)
@@ -476,6 +481,9 @@ void bench()
 		color[i] = bench_color[i];
 		piece[i] = bench_piece[i];
 	}
+	syncBoard();
+	ASSERT(checkBoard());
+
 	side = LIGHT;
 	xside = DARK;
 	castle = 0;
@@ -486,7 +494,7 @@ void bench()
 	set_hash();
 	print_board();
 	max_time = 1 << 25;
-	max_depth = 5;
+	max_depth = 7;
 	for (i = 0; i < 3; ++i) {
 		think(1);
 		t[i] = get_ms() - start_time;

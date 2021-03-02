@@ -27,22 +27,17 @@
 #define EMPTY			6
 
 /* useful squares */
-#define A1				56
-#define B1				57
-#define C1				58
-#define D1				59
-#define E1				60
-#define F1				61
-#define G1				62
-#define H1				63
-#define A8				0
-#define B8				1
-#define C8				2
-#define D8				3
-#define E8				4
-#define F8				5
-#define G8				6
-#define H8				7
+enum square
+{
+	A8,	B8, C8, D8, E8, F8, G8, H8,
+	A7, B7, C7, D7, E7, F7, G7, H7,
+	A6, B6, C6, D6, E6, F6, G6, H6,
+	A5, B5, C5, D5, E5, F5, G5, H5,
+	A4, B4, C4, D4, E4, F4, G4, H4,
+	A3, B3, C3, D3, E3, F3, G3, H3,
+	A2, B2, C2, D2, E2, F2, G2, H2,
+	A1, B1, C1, D1, E1, F1, G1, H1
+};
 
 #define ROW(x)			(x >> 3)
 #define COL(x)			(x & 7)
@@ -86,9 +81,23 @@ typedef struct {
    necessary to take a move back. */
 typedef struct {
 	move m;
+	int captureBoard; // Capture régulière
+	int captureEp;    // Capture de la pièce en passant												
 	int capture;
 	int castle;
 	int ep;
 	int fifty;
 	int hash;
 } hist_t;
+
+// Fonction d'ASSERT perso
+#ifdef _DEBUG
+	#define ASSERT(a) if (!(a)) {int n=0; n/=n;};
+#else
+	#define ASSERT(a) ;
+#endif
+
+#define PIECE_DEAD (-1)
+#define USE_PIECE_LIST // Macro permettant d'activer le rajout de l'optimisation basée sur les listes de pièces
+#define USE_PIECE_LIST_GEN // Macro permettant d'activer le rajout de l'optimisation basée sur les listes de pièces pour les fonctions gen() et gen_caps(). 
+                             // Cela modifie le nombre de noeuds. 

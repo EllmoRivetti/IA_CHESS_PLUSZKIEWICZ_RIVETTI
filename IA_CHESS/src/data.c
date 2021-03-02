@@ -177,3 +177,7 @@ int init_piece[64] = {
 	0, 0, 0, 0, 0, 0, 0, 0,
 	3, 1, 2, 4, 5, 2, 1, 3
 };
+
+int pospiece[33]; // Les positions des pièces, pospiece[0] n'est pas utilisé
+int board[64];    // L'échiquier contenant les indices des pièces
+char can_attack[6][64][64]; // table prégénérée permettant d'accélérer la fonction attack()
