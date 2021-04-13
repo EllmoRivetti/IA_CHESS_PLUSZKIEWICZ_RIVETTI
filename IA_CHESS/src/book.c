@@ -5,11 +5,14 @@
  *	Copyright 1997 Tom Kerrigan
  */
 
+#ifndef BOOK_C
+#define BOOK_C
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <stdint.h>
 #include "defs.h"
 #include "data.h"
 #include "protos.h"
@@ -119,3 +122,5 @@ BOOL book_match(char *s1, char *s2)
 			return FALSE;
 	return TRUE;
 }
+
+#endif // BOOK_C

@@ -5,9 +5,13 @@
  *	Copyright 1997 Tom Kerrigan
  */
 
+#ifndef DATA_C
+#define DATA_C
 
 #include "defs.h"
 
+HtTyp HT[HT_SIZE];
+HtLearning HTLearning[HTLearning_SIZE];
 
 /* the board representation */
 int color[64];  /* LIGHT, DARK, or EMPTY */
@@ -22,7 +26,7 @@ int ep;  /* the en passant square. if white moves e2e4, the en passant
 			in an en passant capture */
 int fifty;  /* the number of moves since a capture or pawn move, used
                to handle the fifty-move-draw rule */
-int hash;  /* a (more or less) unique number that corresponds to the
+HashType hash;  /* a (more or less) unique number that corresponds to the
               position */
 int ply;  /* the number of half-moves (ply) since the
              root of the search tree */
@@ -44,14 +48,14 @@ hist_t hist_dat[HIST_STACK];
 
 /* the engine will search for max_time milliseconds or until it finishes
    searching max_depth ply. */
-int max_time;
+long long max_time;
 int max_depth;
 
 /* the time when the engine starts searching, and when it should stop */
-int start_time;
-int stop_time;
+long long start_time;
+long long stop_time;
 
-int nodes;  /* the number of nodes we've searched */
+unsigned long long  nodes;  /* the number of nodes we've searched */
 
 /* a "triangular" PV array; for a good explanation of why a triangular
    array is needed, see "How Computers Play Chess" by Levy and Newborn. */
@@ -60,9 +64,9 @@ int pv_length[MAX_PLY];
 BOOL follow_pv;
 
 /* random numbers used to compute hash; see set_hash() in board.c */
-int hash_piece[2][6][64];  /* indexed by piece [color][type][square] */
-int hash_side;
-int hash_ep[64];
+HashType hash_piece[2][6][64];  /* indexed by piece [color][type][square] */
+HashType hash_side;
+HashType hash_ep[64];
 
 /* Now we have the mailbox array, so called because it looks like a
    mailbox, at least according to Bob Hyatt. This is useful when we
@@ -178,24 +182,24 @@ int init_piece[64] = {
 	3, 1, 2, 4, 5, 2, 1, 3
 };
 
-/* Piece positions in board */
-int pospiece[33] = {
-	0, // dead piece
-	0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0
-};
+unsigned long x[55] = {
+1410651636UL, 3012776752UL, 3497475623UL, 2892145026UL, 1571949714UL,
+3253082284UL, 3489895018UL, 387949491UL, 2597396737UL, 1981903553UL,
+3160251843UL, 129444464UL, 1851443344UL, 4156445905UL, 224604922UL,
+1455067070UL, 3953493484UL, 1460937157UL, 2528362617UL, 317430674UL,
+3229354360UL, 117491133UL, 832845075UL, 1961600170UL, 1321557429UL,
+747750121UL, 545747446UL, 810476036UL, 503334515UL, 4088144633UL,
+2824216555UL, 3738252341UL, 3493754131UL, 3672533954UL, 29494241UL,
+1180928407UL, 4213624418UL, 33062851UL, 3221315737UL, 1145213552UL,
+2957984897UL, 4078668503UL, 2262661702UL, 65478801UL, 2527208841UL,
+1960622036UL, 315685891UL, 1196037864UL, 804614524UL, 1421733266UL,
+2017105031UL, 3882325900UL, 810735053UL, 384606609UL, 2393861397UL };
+int initAl = 1;
+unsigned long y[55];
+int j, k;
 
-/* Board containing index of pospiece */
-int board[64] = {
-	18, 19, 20, 21, 17, 22, 23, 24,
-	25, 26, 27, 28, 29, 30, 31, 32,
-	 0,  0,  0,  0,  0,  0,  0,  0,
-	 0,  0,  0,  0,  0,  0,  0,  0,
-	 0,  0,  0,  0,  0,  0,  0,  0,
-	 0,  0,  0,  0,  0,  0,  0,  0,
-	 9, 10, 11, 12, 13, 14, 15, 16,
-	 2,  3,  4,  5,  1,  6,  7,  8
-};
-char canAttack[6][64][64];
+int pospiece[33]; // Les positions des pi�ces, pospiece[0] n'est pas utilis�
+int board[64];    // L'�chiquier contenant les indices des pi�ces
+char can_attack[6][64][64]; // table pr�g�n�r�e permettant d'acc�l�rer la fonction attack()
+
+#endif // DATA_C

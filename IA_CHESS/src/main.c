@@ -5,22 +5,23 @@
  *	Copyright 2019 Tom Kerrigan
  */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <stdint.h>
 #include "defs.h"
 #include "data.h"
 #include "protos.h"
+#include "Util.h"
 
 
-/* get_ms() returns the milliseconds elapsed since midnight,
-   January 1, 1970. */
+ /* get_ms() returns the milliseconds elapsed since midnight,
+	January 1, 1970. */
 
-#include <sys/timeb.h>
 BOOL ftime_ok = FALSE;  /* does ftime return milliseconds? */
-int get_ms()
+
+long long get_ms()
 {
 	struct timeb timebuffer;
 	ftime(&timebuffer);
@@ -28,7 +29,6 @@ int get_ms()
 		ftime_ok = TRUE;
 	return (timebuffer.time * 1000) + timebuffer.millitm;
 }
-
 
 /* main() is basically an infinite loop that either calls
    think() when it's the computer's turn to move or prompts
@@ -42,19 +42,23 @@ int main()
 
 	printf("\n");
 	printf("Tom Kerrigan's Simple Chess Program (TSCP)\n");
-	printf("version 1.81c, 2/3/19\n");
+	printf("version 1.81c, 10/02/2021 HASH\n");
 	printf("Copyright 2019 Tom Kerrigan\n");
 	printf("\n");
 	printf("\"help\" displays a list of commands.\n");
 	printf("\n");
 	init_hash();
-	initAttackTables();
 	init_board();
 	open_book();
 	gen();
+	init_attack_table();				 
+	InitHT();
+	initHTLearning();
+	restoreLearning();
+	AssertMovesCount();
 	computer_side = EMPTY;
 	max_time = 1 << 25;
-	max_depth = 4;
+	max_depth = 7;
 	for (;;) {
 		if (side == computer_side) {  /* computer's turn */
 			
@@ -86,7 +90,7 @@ int main()
 			continue;
 		}
 		if (!strcmp(s, "st")) {
-			scanf("%d", &max_time);
+			scanf("%lld", &max_time);
 			max_time *= 1000;
 			max_depth = 32;
 			continue;
@@ -209,7 +213,7 @@ int parse_move(char *s)
 
 char *move_str(move_bytes m)
 {
-	static char str[6];
+	static char str[200];
 
 	char c;
 
@@ -336,7 +340,7 @@ void xboard()
 			continue;
 		}
 		if (!strcmp(command, "st")) {
-			sscanf(line, "st %d", &max_time);
+			sscanf(line, "st %lld", &max_time);
 			max_time *= 1000;
 			max_depth = 32;
 			continue;
@@ -347,7 +351,7 @@ void xboard()
 			continue;
 		}
 		if (!strcmp(command, "time")) {
-			sscanf(line, "time %d", &max_time);
+			sscanf(line, "time %lld", &max_time);
 			max_time *= 10;
 			max_time /= 30;
 			max_depth = 32;
@@ -358,6 +362,10 @@ void xboard()
 		}
 		if (!strcmp(command, "go")) {
 			computer_side = side;
+			continue;
+		}
+		if (!strcmp(command, "d")) {
+			print_board();
 			continue;
 		}
 		if (!strcmp(command, "hint")) {
@@ -466,7 +474,7 @@ int bench_piece[64] = {
 void bench()
 {
 	int i;
-	int t[3];
+	long long  t[3]; // Temps en ms
 	double nps;
 
 	/* setting the position to a non-initial position confuses the opening
@@ -477,7 +485,9 @@ void bench()
 		color[i] = bench_color[i];
 		piece[i] = bench_piece[i];
 	}
-	sync_board();
+	syncBoard();
+	ASSERT(checkBoard());
+
 	side = LIGHT;
 	xside = DARK;
 	castle = 0;
@@ -488,19 +498,22 @@ void bench()
 	set_hash();
 	print_board();
 	max_time = 1 << 25;
-	max_depth = 7;
+	max_depth = 6;
+	InitHT(); 
 	for (i = 0; i < 3; ++i) {
+		//initHT(); // Plac� l� pour obtenir les m�mes performances pour chaque bench
+		            // Sinon, sortir de la boucle et mettre au-dessus
 		think(1);
 		t[i] = get_ms() - start_time;
-		printf("Time: %d ms\n", t[i]);
+		printf("Time: %lld ms\n", t[i]);
 	}
 	if (t[1] < t[0])
 		t[0] = t[1];
 	if (t[2] < t[0])
 		t[0] = t[2];
 	printf("\n");
-	printf("Nodes: %d\n", nodes);
-	printf("Best time: %d ms\n", t[0]);
+	printf("Nodes: %lld\n", nodes);
+	printf("Best time: %lld ms\n", t[0]);
 	if (!ftime_ok) {
 		printf("\n");
 		printf("Your compiler's ftime() function is apparently only accurate\n");

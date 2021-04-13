@@ -5,13 +5,16 @@
  *	Copyright 1997 Tom Kerrigan
  */
 
+#ifndef PROTOS_H
+#define PROTOS_H
+
 
 /* prototypes */
 
 /* board.c */
 void init_board();
 void init_hash();
-int hash_rand();
+HashType hash_rand();
 void set_hash();
 BOOL in_check(int s);
 BOOL attack(int sq, int s);
@@ -21,6 +24,19 @@ void gen_push(int from, int to, int bits);
 void gen_promote(int from, int to, int bits);
 BOOL makemove(move_bytes m);
 void takeback();
+void syncBoard();
+int checkBoard();
+void init_attack_table();
+void print_attacktables(char table[64]);	
+void InitHT();
+unsigned long Aleatoire(void);
+HashType Aleatoire64(void);
+void initHTLearning();
+HtLearning *getLearn(HashType hash);
+void learn(HashType hash, int depth, int eval);
+void restoreLearning();
+void saveLearning();
+void testLearn();
 
 /* book.c */
 void open_book();
@@ -33,7 +49,7 @@ void think(int output);
 int search(int alpha, int beta, int depth);
 int quiesce(int alpha, int beta);
 int reps();
-void sort_pv();
+void sort_pv(move m);
 void sort(int from);
 void checkup();
 
@@ -47,7 +63,7 @@ int eval_dark_king(int sq);
 int eval_dkp(int f);
 
 /* main.c */
-int get_ms();
+long long get_ms();
 int main();
 int parse_move(char *s);
 char *move_str(move_bytes m);
@@ -55,3 +71,9 @@ void print_board();
 void xboard();
 void print_result();
 void bench();
+extern void InitHT();
+extern HtTyp *getTT();
+extern void putTT(int depth, int eval, move m, int alpha, int beta);
+
+
+#endif // PROTOS_H
