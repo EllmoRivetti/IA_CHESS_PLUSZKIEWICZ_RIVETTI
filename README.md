@@ -25,6 +25,8 @@ Contient le code de la partie "Optimisation des fonctions de hashing" du TD4.
 Le rapport du TD4 se trouve sur cette branche.
 
 ### [opti3](https://github.com/EllmoRivetti/IA_CHESS_PLUSZKIEWICZ_RIVETTI/tree/opti3)
-Contient le code de la partie "Implémentation d’une table de transposition"du TD4.
+Contient le code de la partie "Implémentation d’une table de transposition" du TD4.
 
 ## DM 3 - Apprentissage
+### [dm3](https://github.com/EllmoRivetti/IA_CHESS_PLUSZKIEWICZ_RIVETTI/tree/DM3)
+Contient le code du devoir maison 3.
